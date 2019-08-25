@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Attractors</title>
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script src="TrackballControls.js"></script>
+<style>
+body {
+  margin: 0;
+}
+</style>
+</head>
+<body>
+</body>
+<script>
+const W = window.innerWidth;
+const H = window.innerHeight;
+
+const projection = {
+  angle: 45,
+  aspect: W / H,
+  near: 0.1,
+  far: 10000
+};
+
+const container = document.querySelector('body');
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(W, H);
+renderer.setPixelRatio( window.devicePixelRatio );
+container.appendChild(renderer.domElement);
+
+
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+  projection.angle,
+  projection.aspect,
+  projection.near,
+  projection.far
+);
+camera.position.set( 0, 0, 300 );
+
+
+
+const controls = new THREE.TrackballControls( camera, renderer.domElement );
+controls.rotateSpeed = 1.0;
+controls.zoomSpeed = 1.2;
+controls.panSpeed = 0.8;
+controls.noZoom = false;
+controls.noPan = false;
+controls.staticMoving = true;
+controls.dynamicDampingFactor = 0.3;
+controls.keys = [ 65, 83, 68 ];
+controls.addEventListener( 'change', render );
+
+
+const scene = new THREE.Scene();
+scene.add(camera);
+
+
+const radius = 50;
+const segments = 16;
+const rings = 16;
+
+// Scene objects
+const material = new THREE.MeshLambertMaterial({
+  color: 0xCC0000
+});
+
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(
+    radius, segments, rings), material);
+sphere.position.z = -300;
+scene.add(sphere);
+
+const sphere2 = new THREE.Mesh(
+  new THREE.SphereGeometry(
+    radius, segments, rings), material);
+sphere2.position.z = -400;
+sphere2.position.x = 50;
+scene.add(sphere2);
+
+// light
+const pointLight = new THREE.PointLight(0xFFFFFF);
+pointLight.position.x = 10;
+pointLight.position.y = 50;
+pointLight.position.z = 130;
+scene.add(pointLight);
+
+
+
+function animate() {
+	requestAnimationFrame( animate );
+	controls.update();
+}
+
+function render() {
+  renderer.render(scene, camera);
+}
+
+
+render();
+animate();
+
+</script>
+</html>
