@@ -6,12 +6,41 @@
 <script src="TrackballControls.js"></script>
 <script src="lorenz.js"></script>
 <style>
-body {
+body, p {
   margin: 0;
+  font-family: Tahoma;
+}
+
+.control-panel {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  top: 20px;
+  right: 20px;
+  background: #555;
+  color: #ddd;
+  opacity: 0.85;
+  padding: 10px;
+  border-radius: 4px;
+  border: 2px solid #bcd;
+  font-size: 14px;
+  max-width: 20%;
 }
 </style>
 </head>
 <body>
+<div class="control-panel">
+  <div>
+    <p> Mouse-drag to rotate the scene, mouse-wheel to zoom-in/zoom-out.</p>
+  </div>
+  <div><hr/></div>
+  <div>
+    <label>Select attractor</label>
+    <select>
+      <option value="lorenz">Lorenz</option>
+    </select>
+  </div>
+</div>
 </body>
 <script>
 const W = window.innerWidth;
@@ -77,7 +106,6 @@ function vertexShader() {
 
     void main() {
       vUv = position; 
-
       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
       gl_Position = projectionMatrix * modelViewPosition; 
     }
@@ -88,7 +116,8 @@ function fragmentShader() {
   return `
     varying vec3 vUv;
     void main() {
-      gl_FragColor = vec4(1.0, 0.5, 1.0, 1.0);
+      // gl_FragColor = vec4(vUv.x / vUv.y, vUv.y / vUv.z, vUv.z / vUv.x, 1.0);
+      gl_FragColor = vec4(0.5, 0.6, 0.7, 1.0);
     }
   `
 }
@@ -102,21 +131,40 @@ const lineMaterial = new THREE.ShaderMaterial({
 
 const lorenz = new Lorenz();
 
-const MAX_POINTS = 5000;
+const MAX_POINTS = 4000;
 const geometry = new THREE.BufferGeometry();
 const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
 geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 
-let drawCount = 2;
-geometry.setDrawRange( 0, drawCount );
+let drawCount = 0;
+// geometry.setDrawRange( 0, drawCount );
 const line = new THREE.Line( geometry,  lineMaterial);
 scene.add( line );
+
+const xaxis = new THREE.Geometry();
+xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
+xaxis.vertices.push(new THREE.Vector3(9999, 0, 0));
+scene.add(new THREE.Line( xaxis, lineMaterial));
+
+const yaxis = new THREE.Geometry();
+yaxis.vertices.push(new THREE.Vector3(0, -9999, 0));
+yaxis.vertices.push(new THREE.Vector3(0, 9999, 0));
+scene.add(new THREE.Line( yaxis, lineMaterial));
+
+const zaxis = new THREE.Geometry();
+zaxis.vertices.push(new THREE.Vector3(0, 0, -9999));
+zaxis.vertices.push(new THREE.Vector3(0, 0, 9999));
+scene.add(new THREE.Line( zaxis, lineMaterial));
+
+
+
+
 updatePositions();
 
 
 function updatePositions() {
 	const positions = line.geometry.attributes.position.array;
-
+  lorenz.reset(true);
   
   let index = 0;
   for (let i = 0; i < MAX_POINTS; i++) {
@@ -126,21 +174,7 @@ function updatePositions() {
 		positions[ index++ ] = pos.z;
     lorenz.next();
   }
- 
-
-  /*
-	var x = y = z = index = 0;
-	for ( var i = 0, l = MAX_POINTS; i < l; i ++ ) {
-		positions[ index ++ ] = x;
-		positions[ index ++ ] = y;
-		positions[ index ++ ] = z;
-		x += ( Math.random() - 0.5 ) * 30;
-		y += ( Math.random() - 0.5 ) * 30;
-		z += ( Math.random() - 0.5 ) * 30;
-	}
-  */
 }
-
 
 
 function render() {
@@ -151,7 +185,7 @@ function animate() {
 	requestAnimationFrame( animate );
 	controls.update();
 
-	drawCount = ( drawCount + 1 ) % MAX_POINTS;
+	drawCount = ( drawCount + 20 ) % MAX_POINTS;
 	// line.geometry.setDrawRange( 0, drawCount );
 	line.geometry.setDrawRange( 0, drawCount );
 

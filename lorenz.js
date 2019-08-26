@@ -1,11 +1,25 @@
 class Lorenz {
   constructor() {
-    this.x = 0.1; 
-    this.y = 0;
-    this.z = 0; 
-    this.a = 10.0;
-    this.b = 28.0;
-    this.c = 8.0 / 3.0;
+    this.reset();
+  }
+
+  reset(random = false) {
+    if (random === false) {
+      this.x = 0.1; 
+      this.y = 0;
+      this.z = 0; 
+      this.a = 10.0;
+      this.b = 28.0;
+      this.c = 8.0 / 3.0;
+    } else {
+      console.log('random');
+      this.x = 0.1; 
+      this.y = 0;
+      this.z = 0; 
+      this.a = 5.0 + Math.random()*5;
+      this.b = 14.0 + Math.random()*14;
+      this.c = 8.0 / 3.0;
+    }
   }
 
   getPosition() {
