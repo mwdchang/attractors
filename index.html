@@ -3,8 +3,8 @@
 <head>
 <title>Attractors</title>
 <script src="three.min.js"></script>
-<script src="OrbitControls.js"></script>
 <script src="TrackballControls.js"></script>
+<script src="lorenz.js"></script>
 <style>
 body {
   margin: 0;
@@ -32,7 +32,6 @@ renderer.setPixelRatio( window.devicePixelRatio );
 container.appendChild(renderer.domElement);
 
 
-
 // Camera
 const camera = new THREE.PerspectiveCamera(
   projection.angle,
@@ -40,13 +39,12 @@ const camera = new THREE.PerspectiveCamera(
   projection.near,
   projection.far
 );
-camera.position.set( 0, 0, 300 );
-
+camera.position.set( 0, 0, 200 );
 
 
 const controls = new THREE.TrackballControls( camera, renderer.domElement );
-controls.rotateSpeed = 1.0;
-controls.zoomSpeed = 1.2;
+controls.rotateSpeed = 2.0;
+controls.zoomSpeed = 2.0;
 controls.panSpeed = 0.8;
 controls.noZoom = false;
 controls.noPan = false;
@@ -65,22 +63,6 @@ const segments = 16;
 const rings = 16;
 
 // Scene objects
-const material = new THREE.MeshLambertMaterial({
-  color: 0xCC0000
-});
-
-const sphere = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    radius, segments, rings), material);
-sphere.position.z = -300;
-scene.add(sphere);
-
-const sphere2 = new THREE.Mesh(
-  new THREE.SphereGeometry(
-    radius, segments, rings), material);
-sphere2.position.z = -400;
-sphere2.position.x = 50;
-scene.add(sphere2);
 
 // light
 const pointLight = new THREE.PointLight(0xFFFFFF);
@@ -89,19 +71,98 @@ pointLight.position.y = 50;
 pointLight.position.z = 130;
 scene.add(pointLight);
 
+function vertexShader() {
+  return `
+    varying vec3 vUv; 
 
+    void main() {
+      vUv = position; 
 
-function animate() {
-	requestAnimationFrame( animate );
-	controls.update();
+      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewPosition; 
+    }
+  `
 }
+
+function fragmentShader() {
+  return `
+    varying vec3 vUv;
+    void main() {
+      gl_FragColor = vec4(1.0, 0.5, 1.0, 1.0);
+    }
+  `
+}
+
+const lineMaterial = new THREE.ShaderMaterial({
+  vertexShader: vertexShader(),
+  fragmentShader: fragmentShader()
+});
+
+
+
+const lorenz = new Lorenz();
+
+const MAX_POINTS = 5000;
+const geometry = new THREE.BufferGeometry();
+const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
+geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+
+let drawCount = 2;
+geometry.setDrawRange( 0, drawCount );
+const line = new THREE.Line( geometry,  lineMaterial);
+scene.add( line );
+updatePositions();
+
+
+function updatePositions() {
+	const positions = line.geometry.attributes.position.array;
+
+  
+  let index = 0;
+  for (let i = 0; i < MAX_POINTS; i++) {
+    const pos = lorenz.getPosition();
+		positions[ index++ ] = pos.x;
+		positions[ index++ ] = pos.y;
+		positions[ index++ ] = pos.z;
+    lorenz.next();
+  }
+ 
+
+  /*
+	var x = y = z = index = 0;
+	for ( var i = 0, l = MAX_POINTS; i < l; i ++ ) {
+		positions[ index ++ ] = x;
+		positions[ index ++ ] = y;
+		positions[ index ++ ] = z;
+		x += ( Math.random() - 0.5 ) * 30;
+		y += ( Math.random() - 0.5 ) * 30;
+		z += ( Math.random() - 0.5 ) * 30;
+	}
+  */
+}
+
+
 
 function render() {
   renderer.render(scene, camera);
 }
 
+function animate() {
+	requestAnimationFrame( animate );
+	controls.update();
 
-render();
+	drawCount = ( drawCount + 1 ) % MAX_POINTS;
+	// line.geometry.setDrawRange( 0, drawCount );
+	line.geometry.setDrawRange( 0, drawCount );
+
+	if ( drawCount === 0 ) {
+		// periodically, generate new data
+		updatePositions();
+		line.geometry.attributes.position.needsUpdate = true; // required after the first render
+	}
+  render();
+}
+
 animate();
 
 </script>
