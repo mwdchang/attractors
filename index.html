@@ -144,19 +144,18 @@ scene.add( line );
 const xaxis = new THREE.Geometry();
 xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
 xaxis.vertices.push(new THREE.Vector3(9999, 0, 0));
-scene.add(new THREE.Line( xaxis, lineMaterial));
+scene.add(new THREE.Line( xaxis, new THREE.MeshBasicMaterial({ color: '#F00' })));
+
 
 const yaxis = new THREE.Geometry();
 yaxis.vertices.push(new THREE.Vector3(0, -9999, 0));
 yaxis.vertices.push(new THREE.Vector3(0, 9999, 0));
-scene.add(new THREE.Line( yaxis, lineMaterial));
+scene.add(new THREE.Line( yaxis, new THREE.MeshBasicMaterial({ color: '#0F0' })));
 
 const zaxis = new THREE.Geometry();
 zaxis.vertices.push(new THREE.Vector3(0, 0, -9999));
 zaxis.vertices.push(new THREE.Vector3(0, 0, 9999));
-scene.add(new THREE.Line( zaxis, lineMaterial));
-
-
+scene.add(new THREE.Line( zaxis, new THREE.MeshBasicMaterial({ color: '#00F' })));
 
 
 updatePositions();
