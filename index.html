@@ -2,10 +2,13 @@
 <html>
 <head>
 <title>Attractors</title>
-<!--<script src="three.min.js"></script>-->
+<!--
+<script src="three.min.js"></script>
+-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js" integrity="sha256-321vzZNUH74ANBmvgqtE7e0gtGUjvWYaGMqu63RMcmg=" crossorigin="anonymous"></script>
 <script src="TrackballControls.js"></script>
 <script src="lorenz.js"></script>
+<script src="dejong.js"></script>
 <style>
 body, p {
   margin: 0;
@@ -130,17 +133,30 @@ const lineMaterial = new THREE.ShaderMaterial({
 
 
 
-const lorenz = new Lorenz();
+const attractor = new Lorenz();
 
-const MAX_POINTS = 4000;
+
+let attractorData = null;
+let MAX_POINTS = 6000;
+let multiplier = 1;
+
+
 const geometry = new THREE.BufferGeometry();
 const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
 geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 
 let drawCount = 0;
 // geometry.setDrawRange( 0, drawCount );
-const line = new THREE.Line( geometry,  lineMaterial);
-scene.add( line );
+
+if (attractor.name === 'Lorenz') {
+  attractorData = new THREE.Line( geometry,  lineMaterial);
+  multiplier = 1.0;
+} else {
+  attractorData = new THREE.PointCloud( geometry,  new THREE.PointsMaterial({ color: '#F80', opacity: 0.5 }));
+  multiplier = 25.0;
+}
+
+scene.add( attractorData );
 
 const xaxis = new THREE.Geometry();
 xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
@@ -163,16 +179,16 @@ updatePositions();
 
 
 function updatePositions() {
-	const positions = line.geometry.attributes.position.array;
-  lorenz.reset(true);
+	const positions = attractorData.geometry.attributes.position.array;
+  attractor.reset(true);
   
   let index = 0;
   for (let i = 0; i < MAX_POINTS; i++) {
-    const pos = lorenz.getPosition();
-		positions[ index++ ] = pos.x;
-		positions[ index++ ] = pos.y;
-		positions[ index++ ] = pos.z;
-    lorenz.next();
+    const pos = attractor.getPosition();
+		positions[ index++ ] = multiplier * pos.x;
+		positions[ index++ ] = multiplier * pos.y;
+		positions[ index++ ] = multiplier * pos.z;
+    attractor.next();
   }
 }
 
@@ -187,12 +203,12 @@ function animate() {
 
 	drawCount = ( drawCount + 20 ) % MAX_POINTS;
 	// line.geometry.setDrawRange( 0, drawCount );
-	line.geometry.setDrawRange( 0, drawCount );
+	attractorData.geometry.setDrawRange( 0, drawCount );
 
 	if ( drawCount === 0 ) {
 		// periodically, generate new data
 		updatePositions();
-		line.geometry.attributes.position.needsUpdate = true; // required after the first render
+		attractorData.geometry.attributes.position.needsUpdate = true; // required after the first render
 	}
   render();
 }

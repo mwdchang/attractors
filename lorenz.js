@@ -1,5 +1,6 @@
 class Lorenz {
   constructor() {
+    this.name = 'Lorenz';
     this.reset();
   }
 
@@ -12,7 +13,6 @@ class Lorenz {
       this.b = 28.0;
       this.c = 8.0 / 3.0;
     } else {
-      console.log('random');
       this.x = 0.1; 
       this.y = 0;
       this.z = 0; 
