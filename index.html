@@ -2,13 +2,14 @@
 <html>
 <head>
 <title>Attractors</title>
-<!--
 <script src="three.min.js"></script>
--->
+<!--
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js" integrity="sha256-321vzZNUH74ANBmvgqtE7e0gtGUjvWYaGMqu63RMcmg=" crossorigin="anonymous"></script>
+-->
 <script src="TrackballControls.js"></script>
 <script src="lorenz.js"></script>
 <script src="dejong.js"></script>
+<script src="rossler.js"></script>
 <style>
 body, p {
   margin: 0;
@@ -72,7 +73,7 @@ const camera = new THREE.PerspectiveCamera(
   projection.near,
   projection.far
 );
-camera.position.set( 0, 0, 200 );
+camera.position.set( 50, 50, 200 );
 
 
 const controls = new THREE.TrackballControls( camera, renderer.domElement );
@@ -133,12 +134,12 @@ const lineMaterial = new THREE.ShaderMaterial({
 
 
 
-const attractor = new Lorenz();
+const attractor = new Rossler();
 
 
 let attractorData = null;
-let MAX_POINTS = 6000;
-let multiplier = 1;
+let MAX_POINTS = attractor.iterations;
+let multiplier = attractor.multiplier;
 
 
 const geometry = new THREE.BufferGeometry();
@@ -148,12 +149,10 @@ geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 let drawCount = 0;
 // geometry.setDrawRange( 0, drawCount );
 
-if (attractor.name === 'Lorenz') {
+if (attractor.type === 'line') {
   attractorData = new THREE.Line( geometry,  lineMaterial);
-  multiplier = 1.0;
 } else {
   attractorData = new THREE.PointCloud( geometry,  new THREE.PointsMaterial({ color: '#F80', opacity: 0.5 }));
-  multiplier = 25.0;
 }
 
 scene.add( attractorData );
@@ -161,18 +160,18 @@ scene.add( attractorData );
 const xaxis = new THREE.Geometry();
 xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
 xaxis.vertices.push(new THREE.Vector3(9999, 0, 0));
-scene.add(new THREE.Line( xaxis, new THREE.MeshBasicMaterial({ color: '#F00' })));
+scene.add(new THREE.Line( xaxis, new THREE.MeshBasicMaterial({ color: '#F88' })));
 
 
 const yaxis = new THREE.Geometry();
 yaxis.vertices.push(new THREE.Vector3(0, -9999, 0));
 yaxis.vertices.push(new THREE.Vector3(0, 9999, 0));
-scene.add(new THREE.Line( yaxis, new THREE.MeshBasicMaterial({ color: '#0F0' })));
+scene.add(new THREE.Line( yaxis, new THREE.MeshBasicMaterial({ color: '#8F8' })));
 
 const zaxis = new THREE.Geometry();
 zaxis.vertices.push(new THREE.Vector3(0, 0, -9999));
 zaxis.vertices.push(new THREE.Vector3(0, 0, 9999));
-scene.add(new THREE.Line( zaxis, new THREE.MeshBasicMaterial({ color: '#00F' })));
+scene.add(new THREE.Line( zaxis, new THREE.MeshBasicMaterial({ color: '#88F' })));
 
 
 updatePositions();
@@ -201,7 +200,7 @@ function animate() {
 	requestAnimationFrame( animate );
 	controls.update();
 
-	drawCount = ( drawCount + 20 ) % MAX_POINTS;
+	drawCount = ( drawCount + 10 ) % MAX_POINTS;
 	// line.geometry.setDrawRange( 0, drawCount );
 	attractorData.geometry.setDrawRange( 0, drawCount );
 

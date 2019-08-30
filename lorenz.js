@@ -1,6 +1,9 @@
 class Lorenz {
   constructor() {
     this.name = 'Lorenz';
+    this.iterations = 8000;
+    this.multiplier = 1.0;
+    this.type = 'line';
     this.reset();
   }
 

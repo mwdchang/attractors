@@ -1,6 +1,9 @@
 class DeJong {
   constructor() {
     this.name = 'DeJong';
+    this.iterations = 12000;
+    this.multiplier = 25;
+    this.type = 'cloud';
     this.reset();
   }
 
