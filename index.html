@@ -10,6 +10,7 @@
 <script src="lorenz.js"></script>
 <script src="dejong.js"></script>
 <script src="rossler.js"></script>
+<script src="barnsley.js"></script>
 <style>
 body, p {
   margin: 0;
@@ -41,8 +42,11 @@ body, p {
   <div><hr/></div>
   <div>
     <label>Select attractor</label>
-    <select>
-      <option value="lorenz">Lorenz</option>
+    <select onChange="switchAttractor()">
+      <option value="lorenz" selected>Lorenz</option>
+      <option value="dejong">DeJong</option>
+      <option value="rossler">Rossler</option>
+      <option value="barnsley">Barnsley</option>
     </select>
   </div>
 </div>
@@ -133,29 +137,57 @@ const lineMaterial = new THREE.ShaderMaterial({
 });
 
 
-
-const attractor = new Rossler();
-
-
-let attractorData = null;
-let MAX_POINTS = attractor.iterations;
-let multiplier = attractor.multiplier;
-
-
-const geometry = new THREE.BufferGeometry();
-const positions = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
-geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-
+let attractor; 
+let attractorData;
+let iterations;
+let multiplier;
 let drawCount = 0;
-// geometry.setDrawRange( 0, drawCount );
 
-if (attractor.type === 'line') {
-  attractorData = new THREE.Line( geometry,  lineMaterial);
-} else {
-  attractorData = new THREE.PointCloud( geometry,  new THREE.PointsMaterial({ color: '#F80', opacity: 0.5 }));
+
+function switchAttractor() {
+  const idx = document.querySelector('select').selectedIndex;
+  const name = document.querySelector('select').options[idx].value;
+  console.log('switching to ', name);
+
+  if (attractorData) {
+    scene.remove( attractorData );
+  }
+
+  switch(name) {
+    case 'lorenz':
+      attractor = new Lorenz(); break;
+    case 'dejong':
+      attractor = new DeJong(); break;
+    case 'rossler':
+      attractor = new Rossler(); break;
+    case 'barnsley':
+      attractor = new Barnsley(); break;
+    default:
+      attractor = new Lorenz();
+  }
+
+  // attractor = new Barnsley();
+  attractorData = null;
+  iterations = attractor.iterations;
+  multiplier = attractor.multiplier;
+
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array( 100000 * 3 ); // 3 vertices per point
+  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+
+  if (attractor.type === 'line') {
+    attractorData = new THREE.Line( geometry,  lineMaterial);
+  } else {
+    attractorData = new THREE.Points( geometry,  
+      new THREE.PointsMaterial({ color: '#3D5', opacity: 0.5, size: 0.5 })
+    );
+  }
+  scene.add( attractorData );
+  updatePositions();
 }
 
-scene.add( attractorData );
+
+
 
 const xaxis = new THREE.Geometry();
 xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
@@ -174,15 +206,13 @@ zaxis.vertices.push(new THREE.Vector3(0, 0, 9999));
 scene.add(new THREE.Line( zaxis, new THREE.MeshBasicMaterial({ color: '#88F' })));
 
 
-updatePositions();
 
 
 function updatePositions() {
 	const positions = attractorData.geometry.attributes.position.array;
-  attractor.reset(true);
   
   let index = 0;
-  for (let i = 0; i < MAX_POINTS; i++) {
+  for (let i = 0; i < iterations; i++) {
     const pos = attractor.getPosition();
 		positions[ index++ ] = multiplier * pos.x;
 		positions[ index++ ] = multiplier * pos.y;
@@ -200,19 +230,21 @@ function animate() {
 	requestAnimationFrame( animate );
 	controls.update();
 
-	drawCount = ( drawCount + 10 ) % MAX_POINTS;
+	drawCount = ( drawCount + 20 ) % iterations;
 	// line.geometry.setDrawRange( 0, drawCount );
 	attractorData.geometry.setDrawRange( 0, drawCount );
 
 	if ( drawCount === 0 ) {
 		// periodically, generate new data
+    attractor.reset(true);
 		updatePositions();
 		attractorData.geometry.attributes.position.needsUpdate = true; // required after the first render
 	}
   render();
 }
 
-animate();
 
+switchAttractor();
+animate();
 </script>
 </html>
