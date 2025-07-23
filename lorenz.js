@@ -29,6 +29,10 @@ class Lorenz {
     return { x: this.x, y: this.y, z: this.z };
   }
 
+  getParameters() {
+    return { a: this.a, b: this.b, c: this.c };
+  }
+
   next() {
     const t = 0.01; 
     const xt = t * this.a * (this.y - this.x);

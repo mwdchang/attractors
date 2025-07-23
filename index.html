@@ -11,6 +11,7 @@
 <script src="dejong.js"></script>
 <script src="rossler.js"></script>
 <script src="barnsley.js"></script>
+<script src="aizawa.js"></script>
 <style>
 body, p {
   margin: 0;
@@ -32,6 +33,14 @@ body, p {
   font-size: 14px;
   max-width: 20%;
 }
+
+#params {
+  font-size: 80%;
+  position: absolute; 
+  color: white; 
+  top: 30px; 
+  left: 30px; 
+}
 </style>
 </head>
 <body>
@@ -47,9 +56,12 @@ body, p {
       <option value="dejong">DeJong</option>
       <option value="rossler">Rossler</option>
       <option value="barnsley">Barnsley</option>
+      <option value="aizawa">Aizawa</option>
     </select>
   </div>
 </div>
+<pre id="params"> 
+</pre>
 </body>
 <script>
 const W = window.innerWidth;
@@ -162,9 +174,12 @@ function switchAttractor() {
       attractor = new Rossler(); break;
     case 'barnsley':
       attractor = new Barnsley(); break;
+    case 'aizawa':
+      attractor = new Aizawa(); break;
     default:
       attractor = new Lorenz();
   }
+  document.getElementById("params").innerHTML = JSON.stringify(attractor.getParameters(), null, 2);
 
   // attractor = new Barnsley();
   attractorData = null;
@@ -237,6 +252,8 @@ function animate() {
 	if ( drawCount === 0 ) {
 		// periodically, generate new data
     attractor.reset(true);
+    document.getElementById("params").innerHTML = JSON.stringify(attractor.getParameters(), null, 2);
+
 		updatePositions();
 		attractorData.geometry.attributes.position.needsUpdate = true; // required after the first render
 	}

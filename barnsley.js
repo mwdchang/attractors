@@ -67,10 +67,15 @@ class Barnsley {
         f4_a * x + f4_b * y + f4_e,
         f4_c * x + f4_d * y + f4_f
       ];
-    } }
+    } 
+  }
 
   getPosition() {
-    return { x: this.x, y: this.y, z: 0 }
+    return { x: this.x, y: this.y, z: 0 };
+  }
+
+  getParameters() {
+    return "n/a";
   }
 
   next() {

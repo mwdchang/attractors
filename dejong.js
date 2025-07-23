@@ -29,6 +29,11 @@ class DeJong {
     return { x: this.x, y: this.y, z: 0 }
   }
 
+
+  getParameters() {
+    return { a: this.a, b: this.b, c: this.c, d: this.d };
+  }
+
   next() {
     let xnew = Math.sin(this.a * this.y) - Math.cos(this.b * this.x);
     let ynew = Math.sin(this.c * this.x) - Math.cos(this.d * this.y);
