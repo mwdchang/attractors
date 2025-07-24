@@ -75,7 +75,7 @@ class Barnsley {
   }
 
   getParameters() {
-    return "n/a";
+    return "not applicable";
   }
 
   next() {

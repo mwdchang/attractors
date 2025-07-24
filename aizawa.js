@@ -8,6 +8,10 @@ class Aizawa {
   }
 
   reset(random = false) {
+    const vary = (v) => {
+      return Math.random() > 0.5 ? v * Math.random() : -v * Math.random();
+    };
+    
     if (random === false) {
       this.x = 0.1; 
       this.y = 0.1;
@@ -21,13 +25,13 @@ class Aizawa {
     } else {
       this.x = 0.1; 
       this.y = 0.1;
-      this.z = 0.1; 
-      this.a = 0.95 * Math.random();
-      this.b = 0.70 * Math.random();
-      this.c = 0.60 * Math.random();
-      this.d = 3.50 * Math.random();
-      this.e = 0.25 * Math.random();
-      this.f = 0.10 * Math.random();
+      this.z = 0.1;
+      this.a = 0.95 + vary(0.1);
+      this.b = 0.70 + vary(0.2); 
+      this.c = 0.60 + vary(0.2);
+      this.d = 3.50; 
+      this.e = 0.25 + vary(0.2);
+      this.f = 0.10;
     }
   }
 
@@ -39,12 +43,13 @@ class Aizawa {
     return { a: this.a, b: this.b, c: this.c, d: this.d, e: this.e, f: this.f };
   }
 
-
   next() {
     const t = 0.005; 
     const dx = (this.z - this.b) * this.x - this.d * this.y;
     const dy = this.d * this.x + (this.z - this.b) * this.y;
-    const dz = this.c + this.a * this.z - (Math.pow(this.z, 3) / 3) - ((this.x * this.x + this.y * this.y) * (1 + this.e * this.z)) + this.f * this.z * Math.pow(this.x, 3);
+    const dz = this.c + this.a * this.z - (Math.pow(this.z, 3) / 3) - 
+      ((this.x * this.x + this.y * this.y) * (1 + this.e * this.z)) + 
+      this.f * this.z * Math.pow(this.x, 3);
     this.x += dx * t;
     this.y += dy * t;
     this.z += dz * t;

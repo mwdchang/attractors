@@ -2,11 +2,7 @@
 <html>
 <head>
 <title>Attractors</title>
-<!--
-<script src="three.min.js"></script>
--->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js" integrity="sha256-321vzZNUH74ANBmvgqtE7e0gtGUjvWYaGMqu63RMcmg=" crossorigin="anonymous"></script>
-<script src="TrackballControls.js"></script>
+<!--<script src="TrackballControls.js"></script> -->
 <script src="lorenz.js"></script>
 <script src="dejong.js"></script>
 <script src="rossler.js"></script>
@@ -26,20 +22,17 @@ body, p {
   right: 20px;
   background: #555;
   color: #ddd;
-  opacity: 0.85;
+  opacity: 0.80;
   padding: 10px;
   border-radius: 4px;
-  border: 2px solid #bcd;
+  border: 1px solid #bcd;
   font-size: 14px;
   max-width: 20%;
 }
 
 #params {
   font-size: 80%;
-  position: absolute; 
-  color: white; 
-  top: 30px; 
-  left: 30px; 
+  color: #ddd; 
 }
 </style>
 </head>
@@ -49,9 +42,9 @@ body, p {
     <p> Mouse-drag to rotate the scene, mouse-wheel to zoom-in/zoom-out.</p>
   </div>
   <div><hr/></div>
-  <div>
+  <div style="display: flex; gap: 10px">
     <label>Select attractor</label>
-    <select onChange="switchAttractor()">
+    <select style="flex-grow: 1"> 
       <option value="lorenz" selected>Lorenz</option>
       <option value="dejong">DeJong</option>
       <option value="rossler">Rossler</option>
@@ -59,11 +52,17 @@ body, p {
       <option value="aizawa">Aizawa</option>
     </select>
   </div>
+  <pre id="params"> 
+  </pre>
 </div>
-<pre id="params"> 
-</pre>
 </body>
-<script>
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.178.0';
+import { 
+  TrackballControls 
+} from 'https://esm.sh/three@0.178.0/examples/jsm/controls/TrackballControls.js';
+
+
 const W = window.innerWidth;
 const H = window.innerHeight;
 
@@ -92,7 +91,7 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set( 50, 50, 200 );
 
 
-const controls = new THREE.TrackballControls( camera, renderer.domElement );
+const controls = new TrackballControls( camera, renderer.domElement );
 controls.rotateSpeed = 2.0;
 controls.zoomSpeed = 2.0;
 controls.panSpeed = 0.8;
@@ -124,9 +123,12 @@ scene.add(pointLight);
 function vertexShader() {
   return `
     varying vec3 vUv; 
+    attribute float lineDistance;
+    varying float vLineDistance;
 
     void main() {
       vUv = position; 
+      vLineDistance = lineDistance;
       vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
       gl_Position = projectionMatrix * modelViewPosition; 
     }
@@ -143,9 +145,33 @@ function fragmentShader() {
   `
 }
 
+const uniforms = {
+  u_time: { value: 0.0 }
+};
+function fragmentShader2() {
+  return `
+    uniform float u_time;
+    varying float vLineDistance;
+
+    void main() {
+      // Tweak these two 
+      float speed = 0.05;
+      float cycles = 800.0; 
+
+      float t = fract(vLineDistance * cycles - u_time * speed);
+      float blend = smoothstep(0.2, 0.8, t); // smoother transition
+      vec3 orange = vec3(0.9, 0.5, 0.0);
+      vec3 cyan = vec3(0.0, 0.5, 0.9);
+      vec3 color = mix(orange, cyan, blend);
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `
+}
+
 const lineMaterial = new THREE.ShaderMaterial({
   vertexShader: vertexShader(),
-  fragmentShader: fragmentShader()
+  fragmentShader: fragmentShader2(),
+  uniforms
 });
 
 
@@ -155,6 +181,9 @@ let iterations;
 let multiplier;
 let drawCount = 0;
 
+document.querySelector('select').addEventListener('change', () => {
+  switchAttractor();
+});
 
 function switchAttractor() {
   const idx = document.querySelector('select').selectedIndex;
@@ -186,9 +215,17 @@ function switchAttractor() {
   iterations = attractor.iterations;
   multiplier = attractor.multiplier;
 
+  const SIZE = 100000;
   const geometry = new THREE.BufferGeometry();
-  const positions = new Float32Array( 100000 * 3 ); // 3 vertices per point
-  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+  const positions = new Float32Array( SIZE * 3 ); // 3 vertices per point
+  geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+
+  const lineDistances = new Float32Array(SIZE);
+  for (let i = 0; i < SIZE; i++) {
+    lineDistances[i] = i / SIZE;
+  }
+  geometry.setAttribute('lineDistance', new THREE.BufferAttribute(lineDistances, 1));
+
 
   if (attractor.type === 'line') {
     attractorData = new THREE.Line( geometry,  lineMaterial);
@@ -202,25 +239,20 @@ function switchAttractor() {
 }
 
 
+const xPositions = new Float32Array([ -9999, 0, 0, 9999, 0, 0 ]);
+const xGeometry = new THREE.BufferGeometry();
+xGeometry.setAttribute('position', new THREE.BufferAttribute(xPositions, 3));
+scene.add(new THREE.Line(xGeometry, new THREE.LineBasicMaterial({ color: '#F88' })));
 
+const yPositions = new Float32Array([ 0, -9999, 0, 0,  9999, 0 ]);
+const yGeometry = new THREE.BufferGeometry();
+yGeometry.setAttribute('position', new THREE.BufferAttribute(yPositions, 3));
+scene.add(new THREE.Line(yGeometry, new THREE.LineBasicMaterial({ color: '#8F8' })));
 
-const xaxis = new THREE.Geometry();
-xaxis.vertices.push(new THREE.Vector3(-9999, 0, 0));
-xaxis.vertices.push(new THREE.Vector3(9999, 0, 0));
-scene.add(new THREE.Line( xaxis, new THREE.MeshBasicMaterial({ color: '#F88' })));
-
-
-const yaxis = new THREE.Geometry();
-yaxis.vertices.push(new THREE.Vector3(0, -9999, 0));
-yaxis.vertices.push(new THREE.Vector3(0, 9999, 0));
-scene.add(new THREE.Line( yaxis, new THREE.MeshBasicMaterial({ color: '#8F8' })));
-
-const zaxis = new THREE.Geometry();
-zaxis.vertices.push(new THREE.Vector3(0, 0, -9999));
-zaxis.vertices.push(new THREE.Vector3(0, 0, 9999));
-scene.add(new THREE.Line( zaxis, new THREE.MeshBasicMaterial({ color: '#88F' })));
-
-
+const zPositions = new Float32Array([ 0, 0, -9999, 0, 0,  9999 ]);
+const zGeometry = new THREE.BufferGeometry();
+zGeometry.setAttribute('position', new THREE.BufferAttribute(zPositions, 3));
+scene.add(new THREE.Line(zGeometry, new THREE.LineBasicMaterial({ color: '#88F' })));
 
 
 function updatePositions() {
@@ -241,7 +273,10 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function animate() {
+function animate(time) {
+  // update uniform
+  uniforms.u_time.value = time / 80; // time in seconds
+
 	requestAnimationFrame( animate );
 	controls.update();
 
