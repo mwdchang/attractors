@@ -2,7 +2,6 @@
 <html>
 <head>
 <title>Attractors</title>
-<!--<script src="TrackballControls.js"></script> -->
 <script src="lorenz.js"></script>
 <script src="dejong.js"></script>
 <script src="rossler.js"></script>
@@ -11,6 +10,7 @@
 <script src="halvorsen.js"></script>
 <script src="clifford.js"></script>
 <script src="sierpinski.js"></script>
+<script src="skybox.js"></script>
 <style>
 body, p {
   margin: 0;
@@ -46,8 +46,12 @@ body, p {
   </div>
   <div><hr/></div>
   <div>
-    <label> Post processing </label>
     <input type="checkbox" id="postprocessing" />
+    <label> Post processing </label>
+  </div>
+  <div>
+    <input type="checkbox" id="skySphere" checked />
+    <label> Sky sphere</label>
   </div>
   <br/>
   <div style="display: flex; gap: 10px">
@@ -75,7 +79,6 @@ import {
 import { EffectComposer } from 'https://esm.sh/three@0.178.0/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'https://esm.sh/three@0.178.0/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'https://esm.sh/three@0.178.0/addons/postprocessing/UnrealBloomPass.js';
-
 
 
 const W = window.innerWidth;
@@ -134,6 +137,11 @@ pointLight.position.x = 10;
 pointLight.position.y = 50;
 pointLight.position.z = 130;
 scene.add(pointLight);
+
+// skybox
+const { skyboxMaterial, skybox } = createSkybox(THREE);
+scene.add(skybox);
+
 
 function vertexShader() {
   return `
@@ -240,6 +248,16 @@ document.getElementById('postprocessing').addEventListener('change', () => {
   usePostProcessing = document.getElementById('postprocessing').checked;
 });
 
+document.getElementById('skySphere').addEventListener('change', () => {
+  const value = document.getElementById('skySphere').checked;
+
+  if (value === false) {
+    scene.remove(skybox);
+  } else {
+    scene.add(skybox);
+  }
+});
+
 
 function switchAttractor() {
   const idx = document.querySelector('select').selectedIndex;
@@ -311,28 +329,36 @@ function switchAttractor() {
 const xPositions = new Float32Array([ -9999, 0, 0, 9999, 0, 0 ]);
 const xGeometry = new THREE.BufferGeometry();
 xGeometry.setAttribute('position', new THREE.BufferAttribute(xPositions, 3));
-scene.add(new THREE.Line(xGeometry, new THREE.LineBasicMaterial({ color: '#F88', transparent: true, opacity: 0.5 })));
+scene.add(new THREE.Line(xGeometry, new THREE.LineBasicMaterial({ color: '#F88', transparent: true, opacity: 0.3 })));
 
 const yPositions = new Float32Array([ 0, -9999, 0, 0,  9999, 0 ]);
 const yGeometry = new THREE.BufferGeometry();
 yGeometry.setAttribute('position', new THREE.BufferAttribute(yPositions, 3));
-scene.add(new THREE.Line(yGeometry, new THREE.LineBasicMaterial({ color: '#8F8', transparent: true, opacity: 0.5 })));
+scene.add(new THREE.Line(yGeometry, new THREE.LineBasicMaterial({ color: '#8F8', transparent: true, opacity: 0.3 })));
 
 const zPositions = new Float32Array([ 0, 0, -9999, 0, 0,  9999 ]);
 const zGeometry = new THREE.BufferGeometry();
 zGeometry.setAttribute('position', new THREE.BufferAttribute(zPositions, 3));
-scene.add(new THREE.Line(zGeometry, new THREE.LineBasicMaterial({ color: '#88F', transparent: true, opacity: 0.5 })));
+scene.add(new THREE.Line(zGeometry, new THREE.LineBasicMaterial({ color: '#88F', transparent: true, opacity: 0.3 })));
 
 
 // Postprocessing bloom setup
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
+/*
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   1.5,   // strength
   1.4,   // radius
- 0.1     // threshold
+  0.1     // threshold
+);
+*/
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  1.5,   // strength
+  1.4,   // radius
+  0.3    // threshold
 );
 composer.addPass(bloomPass);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -360,6 +386,7 @@ function render() {
 function animate(time) {
   // update uniform
   uniforms.u_time.value = time / 80; // time in seconds
+  skyboxMaterial.uniforms.time.value += 0.08;
 
 	requestAnimationFrame( animate );
 	controls.update();
